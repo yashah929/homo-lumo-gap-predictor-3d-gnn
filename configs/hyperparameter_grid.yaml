@@ -1,0 +1,5 @@
+# This grid contains exactly 36 configurations and 144 four-fold runs.
+num_message_passing_layers: [3, 4, 5, 6]
+hidden_dim: [64, 128, 256]
+learning_rate: [0.0001, 0.0003, 0.001]
+num_folds: 4

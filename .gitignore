@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Data and cached molecular graphs
+data/
+*.pt
+*.pth
+*.ckpt
+
+# Experiment outputs that should not be committed
+results/**/checkpoints/
+results/**/runs/
+results/**/curves/
+logs/
+slurm-*.out
+*.log
+
+# Keep result directories and commit-ready summaries/figures
+!results/**/.gitkeep
+!results/**/*.csv
+!results/**/*.json
+!results/**/*.yaml
+!results/**/*.png
+!results/**/*.pdf
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/

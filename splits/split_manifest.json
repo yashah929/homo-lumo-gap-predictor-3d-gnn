@@ -1,0 +1,22 @@
+{
+  "algorithm": "numpy.default_rng permutation; floor(0.8*N) development; numpy.array_split four folds",
+  "files": {
+    "cv_fold_0_validation_indices.npy": "c748ee18e69ea97213b37cf7eee4f44e6689d4533c3246df1e938799fedb3522",
+    "cv_fold_1_validation_indices.npy": "561a07d9c9bc2993fa10f29fddd1471d86c84e6a8fd34bf406b217f879b22c7b",
+    "cv_fold_2_validation_indices.npy": "228e7ad0b25c27daa405669bff0c6fcf7a4ca746c45cc50a68bc377728287780",
+    "cv_fold_3_validation_indices.npy": "217b6779c5654fa809c06842604ebbc9ae538394037569e74ef5788947b683af",
+    "development_indices.npy": "ea67081b81d2c0a4a81ac9ea90857b30579f3b6e8522a7e332a4e0b117384407",
+    "final_test_indices.npy": "e41f6d28e15d228b962e6aba1fa427d6af3d62b6c2ae2355e2411a67014d03ab"
+  },
+  "fold_sizes": [
+    26166,
+    26166,
+    26166,
+    26166
+  ],
+  "identity": "seed42_80-20_development_test_fourfold_v1",
+  "num_development": 104664,
+  "num_final_test": 26167,
+  "num_molecules": 130831,
+  "seed": 42
+}

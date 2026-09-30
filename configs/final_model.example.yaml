@@ -1,0 +1,8 @@
+# Generated values below are placeholders until scripts/summarize_cv.py is run.
+configuration_id: TO_BE_SELECTED_FROM_CV
+num_message_passing_layers: null
+hidden_dim: null
+learning_rate: null
+final_epochs: null
+selection_metric: mean_validation_mae_ev
+selection_source: results/cv/cv_summary.csv
