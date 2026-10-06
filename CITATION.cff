@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, cite this repository and the scientific references in the README."
-title: "QM9 HOMO-LUMO Gap Prediction with a Three-Dimensional MPNN"
+title: "HOMO-LUMO Gap Prediction in QM9 with a Three-Dimensional Message-Passing Neural Network"
 type: software
 version: 0.1.0
 date-released: 2026-09-30

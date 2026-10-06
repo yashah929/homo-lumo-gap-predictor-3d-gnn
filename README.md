@@ -1,4 +1,4 @@
-# QM9 HOMO–LUMO Gap Prediction with a Three-Dimensional MPNN
+# HOMO–LUMO Gap Prediction in QM9 with a Three-Dimensional Message-Passing Neural Network
 
 ## Scientific objective
 
@@ -69,8 +69,8 @@ Selection minimizes mean four-fold validation MAE. Ties are ordered by lower MAE
 Python 3.10 or later is required. Install a PyTorch build appropriate for the local CUDA runtime first when necessary, then install the project:
 
 ```bash
-git clone <repository-url> qm9-gap-gnn
-cd qm9-gap-gnn
+git clone https://github.com/yashah929/homo-lumo-gap-predictor-3d-gnn.git
+cd homo-lumo-gap-predictor-3d-gnn
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -106,7 +106,7 @@ python scripts/evaluate_test.py --confirm-final-test
 Cluster scripts contain no institution-specific account, partition, or path. Submit-site options can be supplied to `sbatch`, while project and environment paths are environment variables:
 
 ```bash
-export PROJECT_DIR=/path/to/qm9-gap-gnn
+export PROJECT_DIR=/path/to/homo-lumo-gap-predictor-3d-gnn
 export ENV_ACTIVATE=/path/to/environment/bin/activate
 
 python scripts/prepare_data.py

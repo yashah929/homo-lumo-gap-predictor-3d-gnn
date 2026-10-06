@@ -5,7 +5,7 @@ The scripts avoid site-specific accounts, partitions, modules, and filesystem pa
 Define:
 
 ```bash
-export PROJECT_DIR=/absolute/path/to/qm9-gap-gnn
+export PROJECT_DIR=/absolute/path/to/homo-lumo-gap-predictor-3d-gnn
 export ENV_ACTIVATE=/absolute/path/to/venv/bin/activate
 export CONFIG_PATH=configs/base.yaml  # data and result roots are specified here
 ```

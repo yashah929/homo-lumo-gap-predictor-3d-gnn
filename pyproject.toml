@@ -3,9 +3,9 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "qm9-gap-gnn"
+name = "homo-lumo-gap-predictor-3d-gnn"
 version = "0.1.0"
-description = "Three-dimensional message-passing neural network for the QM9 HOMO-LUMO gap"
+description = "HOMO-LUMO gap prediction in QM9 with a three-dimensional message-passing neural network"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{name = "Project contributors"}]
