@@ -637,48 +637,63 @@ def plot_model_overview(output_stem: str | Path) -> None:
             color=TEXT_COLOR,
         )
 
-    # Representative QM9 molecule: ethanol, shown as a ball-and-stick structure.
-    molecule_origin = np.array([2.4, 3.0])
-    molecule_scale = 0.88
-    atoms = {
-        "C1": (np.array([-1.05, 0.05]), "C", 250),
-        "C2": (np.array([0.15, 0.28]), "C", 250),
-        "O": (np.array([1.28, -0.20]), "O", 265),
-        "H1": (np.array([-1.55, 0.82]), "H", 105),
-        "H2": (np.array([-1.55, -0.72]), "H", 105),
-        "H3": (np.array([-1.05, -0.92]), "H", 105),
-        "H4": (np.array([0.25, 1.18]), "H", 105),
-        "H5": (np.array([0.28, -0.72]), "H", 105),
-        "HO": (np.array([1.95, 0.34]), "H", 105),
-    }
-    bonds = [
-        ("C1", "C2"),
-        ("C2", "O"),
-        ("C1", "H1"),
-        ("C1", "H2"),
-        ("C1", "H3"),
-        ("C2", "H4"),
-        ("C2", "H5"),
-        ("O", "HO"),
+    # A recognizable nine-heavy-atom molecule is shown without naming it so
+    # the overview retains the intended "can you guess it?" prompt.
+    molecule_coordinates = np.array(
+        [
+            [1.8243, -1.9450],
+            [0.7981, -0.8510],
+            [-0.6625, -1.1926],
+            [-1.6886, -0.0985],
+            [-3.1492, -0.4401],
+            [-1.2542, 1.3372],
+            [0.2064, 1.6788],
+            [1.2325, 0.5848],
+            [2.6931, 0.9264],
+        ]
+    )
+    molecule_elements = ["C", "C", "C", "C", "O", "O", "C", "C", "O"]
+    molecule_bonds = [
+        (0, 1, 1.0),
+        (1, 2, 1.5),
+        (2, 3, 1.5),
+        (3, 4, 2.0),
+        (3, 5, 1.5),
+        (5, 6, 1.5),
+        (6, 7, 1.5),
+        (7, 8, 1.0),
+        (7, 1, 1.5),
     ]
-    mapped_atoms = {
-        key: (molecule_origin + molecule_scale * value[0], value[1], value[2])
-        for key, value in atoms.items()
-    }
-    for first, second in bonds:
-        start = mapped_atoms[first][0]
-        end = mapped_atoms[second][0]
-        axis.plot(
-            [start[0], end[0]],
-            [start[1], end[1]],
-            color="#788699",
-            linewidth=3.0,
-            solid_capstyle="round",
-            zorder=1,
-        )
-    atom_colors = {"C": "#39414D", "O": "#E05A5A", "H": "#F7F9FC"}
-    atom_edges = {"C": "#202733", "O": "#B63D48", "H": "#AEB8C5"}
-    for position, element, size in mapped_atoms.values():
+    coordinate_center = (molecule_coordinates.min(axis=0) + molecule_coordinates.max(axis=0)) / 2
+    mapped_atoms = np.column_stack(
+        [
+            2.4 + 0.56 * (molecule_coordinates[:, 0] - coordinate_center[0]),
+            3.12 + 0.58 * (molecule_coordinates[:, 1] - coordinate_center[1]),
+        ]
+    )
+    for first, second, order in molecule_bonds:
+        start = mapped_atoms[first]
+        end = mapped_atoms[second]
+        offsets = [0.0]
+        if order == 2.0:
+            offsets = [-0.035, 0.035]
+        delta = end - start
+        normal = np.array([-delta[1], delta[0]]) / np.linalg.norm(delta)
+        for offset in offsets:
+            shift = offset * normal
+            axis.plot(
+                [start[0] + shift[0], end[0] + shift[0]],
+                [start[1] + shift[1], end[1] + shift[1]],
+                color="#788699",
+                linewidth=2.2,
+                solid_capstyle="round",
+                zorder=1,
+            )
+    atom_colors = {"C": "#39414D", "O": "#E05A5A"}
+    atom_edges = {"C": "#202733", "O": "#B63D48"}
+    atom_labels = {0: "CH₃", 4: "O", 5: "O", 8: "OH"}
+    for index, (position, element) in enumerate(zip(mapped_atoms, molecule_elements, strict=True)):
+        size = 86 if element == "C" else 205
         axis.scatter(
             position[0],
             position[1],
@@ -688,31 +703,32 @@ def plot_model_overview(output_stem: str | Path) -> None:
             linewidth=1.25,
             zorder=3,
         )
-        if element != "H":
+        if index in atom_labels:
             axis.text(
                 position[0],
                 position[1],
-                element,
+                atom_labels[index],
                 ha="center",
                 va="center",
                 color="white",
-                fontsize=8.5,
+                fontsize=6.8,
                 fontweight="bold",
                 zorder=4,
             )
-    axis.text(2.4, 1.03, "Representative QM9 molecule\nethanol, C₂H₆O", ha="center", fontsize=8.8)
+    axis.text(
+        2.4,
+        0.92,
+        "Can you guess the molecule?\nC₆H₆O₃  •  9 heavy atoms",
+        ha="center",
+        fontsize=8.8,
+    )
 
     # Complete directed graph with an emphasized incoming message aggregation.
     graph_center = np.array([7.0, 3.2])
-    graph_offsets = np.array(
+    graph_offsets = np.column_stack(
         [
-            [-1.25, 0.45],
-            [-0.6, 1.15],
-            [0.32, 1.0],
-            [1.18, 0.35],
-            [0.9, -0.75],
-            [-0.1, -1.08],
-            [-1.05, -0.62],
+            0.45 * (molecule_coordinates[:, 0] - coordinate_center[0]),
+            0.60 * (molecule_coordinates[:, 1] - coordinate_center[1]),
         ]
     )
     graph_nodes = graph_center + graph_offsets
@@ -726,11 +742,11 @@ def plot_model_overview(output_stem: str | Path) -> None:
                 alpha=0.55,
                 zorder=1,
             )
-    target_index = 2
+    target_index = 5
     target = graph_nodes[target_index]
-    for index in (0, 3, 5):
+    for index in (0, 3, 7):
         _add_arrow(axis, tuple(graph_nodes[index]), tuple(target), "arc3,rad=0.10")
-    node_colors = ["#39414D", "#F7F9FC", "#E05A5A", "#F7F9FC", "#39414D", "#F7F9FC", "#F7F9FC"]
+    node_colors = [atom_colors[element] for element in molecule_elements]
     for index, (position, color) in enumerate(zip(graph_nodes, node_colors, strict=True)):
         axis.scatter(
             position[0],

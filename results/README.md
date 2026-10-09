@@ -6,7 +6,7 @@ The experiment pipeline writes commit-ready summaries here:
 - `cv/cv_summary.csv`: four-fold aggregate metrics;
 - `cv/selected_cv_training_curves.csv`: unsmoothed displayed path vertices for the selected folds;
 - `cv/selected_configuration.yaml`: winning hyperparameters and final epoch count;
-- `final/test_metrics.json`: locked-test MAE, RMSE, and $R^2$;
+- `final/test_metrics.json`: locked-test MAE, RMSE, and R²;
 - `final/test_predictions.csv`: molecule-level references, predictions, and residuals;
 - `figures/`: matching PDF and 300 dpi PNG diagnostics plus overview and detailed architecture schematics.
 
@@ -16,6 +16,6 @@ Checkpoints are written below the separately configured `artifacts/checkpoints/`
 
 ## Completed experiment
 
-The 144-run cross-validation study selected `cfg_034` (six message-passing layers, hidden dimension 256, Adam learning rate $3\times10^{-4}$). Its mean validation MAE was $0.051359 \pm 0.001002$ eV, with mean RMSE 0.086402 eV and mean $R^2=0.995452$. The fresh final model was trained for 279 epochs on all 104,664 development molecules.
+The 144-run cross-validation study selected `cfg_034` (six message-passing layers, hidden dimension 256, Adam learning rate 3 × 10⁻⁴). Its mean validation MAE was 0.051359 ± 0.001002 eV, with mean RMSE 0.086402 eV and mean R² = 0.995452. The fresh final model was trained for 279 epochs on all 104,664 development molecules.
 
-The single evaluation on the 26,167-molecule locked test set produced MAE 0.044720 eV, RMSE 0.071658 eV, and $R^2=0.996884$. The molecule-level prediction file uses zero-based indices into the retained 130,831-molecule PyG QM9 dataset. `scripts/validate_results.py` verifies split hashes, disjointness, prediction identifiers and finiteness, metric recomputation, figure presence, checkpoint identity, and manifest consistency.
+The single evaluation on the 26,167-molecule locked test set produced MAE 0.044720 eV, RMSE 0.071658 eV, and R² = 0.996884. The molecule-level prediction file uses zero-based indices into the retained 130,831-molecule PyG QM9 dataset. `scripts/validate_results.py` verifies split hashes, disjointness, prediction identifiers and finiteness, metric recomputation, figure presence, checkpoint identity, and manifest consistency.
