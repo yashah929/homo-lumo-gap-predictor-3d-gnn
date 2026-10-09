@@ -752,7 +752,7 @@ def plot_model_overview(output_stem: str | Path) -> None:
             position[0],
             position[1],
             s=175 if index == target_index else 125,
-            facecolor=color,
+            facecolor="#E05A5A" if index == target_index else color,
             edgecolor=SELECTED_COLOR if index == target_index else "#526173",
             linewidth=2.0 if index == target_index else 1.0,
             zorder=3,
