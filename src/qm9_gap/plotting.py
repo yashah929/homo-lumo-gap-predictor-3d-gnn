@@ -641,28 +641,28 @@ def plot_model_overview(output_stem: str | Path) -> None:
     # the overview retains the intended "can you guess it?" prompt.
     molecule_coordinates = np.array(
         [
-            [1.8243, -1.9450],
-            [0.7981, -0.8510],
-            [-0.6625, -1.1926],
-            [-1.6886, -0.0985],
-            [-3.1492, -0.4401],
-            [-1.2542, 1.3372],
-            [0.2064, 1.6788],
-            [1.2325, 0.5848],
-            [2.6931, 0.9264],
+            [2.5981, -0.8333],
+            [1.2990, -0.0833],
+            [0.0000, -0.8333],
+            [-1.2990, -0.0833],
+            [-2.5981, -0.8333],
+            [-1.2990, 1.4167],
+            [0.0000, 2.1667],
+            [1.2990, 1.4167],
+            [0.0000, -2.3333],
         ]
     )
-    molecule_elements = ["C", "C", "C", "C", "O", "O", "C", "C", "O"]
+    molecule_elements = ["C", "C", "C", "C", "O", "C", "C", "O", "O"]
     molecule_bonds = [
         (0, 1, 1.0),
-        (1, 2, 1.5),
-        (2, 3, 1.5),
+        (1, 2, 2.0),
+        (2, 3, 1.0),
         (3, 4, 2.0),
-        (3, 5, 1.5),
-        (5, 6, 1.5),
-        (6, 7, 1.5),
-        (7, 8, 1.0),
-        (7, 1, 1.5),
+        (3, 5, 1.0),
+        (5, 6, 2.0),
+        (6, 7, 1.0),
+        (7, 1, 1.0),
+        (2, 8, 1.0),
     ]
     coordinate_center = (molecule_coordinates.min(axis=0) + molecule_coordinates.max(axis=0)) / 2
     mapped_atoms = np.column_stack(
@@ -691,9 +691,9 @@ def plot_model_overview(output_stem: str | Path) -> None:
             )
     atom_colors = {"C": "#39414D", "O": "#E05A5A"}
     atom_edges = {"C": "#202733", "O": "#B63D48"}
-    atom_labels = {0: "CH₃", 4: "O", 5: "O", 8: "OH"}
+    atom_labels = {0: "CH₃", 4: "O", 7: "O", 8: "OH"}
     for index, (position, element) in enumerate(zip(mapped_atoms, molecule_elements, strict=True)):
-        size = 86 if element == "C" else 205
+        size = 155 if index == 0 else (86 if element == "C" else 205)
         axis.scatter(
             position[0],
             position[1],
