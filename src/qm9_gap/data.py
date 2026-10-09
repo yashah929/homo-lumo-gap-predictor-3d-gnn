@@ -81,6 +81,16 @@ def _sdf_molecule_for_data(supplier: Any, base_data: Data) -> Any:
     molecule = supplier[raw_index]
     if molecule is None:
         raise ValueError(f"RDKit could not read QM9 SDF molecule {raw_index}")
+    # PyG reads QM9 with sanitize=False because some retained SDF records have
+    # unusual formal valences. Run every sanitization operation except strict
+    # property/valence validation so hybridization, rings, conjugation, and
+    # chirality are still assigned deterministically.
+    operations = Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES
+    failure = Chem.SanitizeMol(molecule, sanitizeOps=operations, catchErrors=True)
+    if failure != Chem.SanitizeFlags.SANITIZE_NONE:
+        raise ValueError(
+            f"RDKit partial sanitization failed for QM9 SDF molecule {raw_index}: {failure}"
+        )
     observed = [atom.GetAtomicNum() for atom in molecule.GetAtoms()]
     expected = torch.as_tensor(base_data.z).tolist()
     if observed != expected:
@@ -89,6 +99,29 @@ def _sdf_molecule_for_data(supplier: Any, base_data: Data) -> Any:
             f"SDF={observed}, PyG={expected}"
         )
     return molecule
+
+
+def enriched_qm9_graph(supplier: Any, base_data: Data, dataset_index: int) -> Data:
+    """Build one chemically enriched graph using the full preprocessing path."""
+    molecule = _sdf_molecule_for_data(supplier, base_data)
+    z, x_cat, atomic_mass = atom_features_from_rdkit(molecule)
+    edge_index = complete_directed_edge_index(z.numel())
+    distance = pairwise_edge_distances(base_data.pos, edge_index)
+    return Data(
+        z=z,
+        x_cat=x_cat,
+        atomic_mass=atomic_mass,
+        pos=base_data.pos.to(torch.float32),
+        edge_index=edge_index,
+        edge_distance=distance.to(torch.float32),
+        edge_chem=chemical_edge_features(molecule, edge_index),
+        y=select_homo_lumo_gap(base_data.y).reshape(1).to(torch.float32),
+        # Avoid names ending in ``index``: PyG increments such attributes while
+        # batching because it assumes they refer to node indices.
+        molecule_id=torch.tensor([dataset_index], dtype=torch.long),
+        raw_qm9_id=torch.as_tensor(base_data.idx, dtype=torch.long).reshape(1),
+        smiles=getattr(base_data, "smiles", ""),
+    )
 
 
 class QM9GapDataset(InMemoryDataset):
@@ -114,6 +147,17 @@ class QM9GapDataset(InMemoryDataset):
             self.data, self.slices = torch.load(self.processed_paths[0], weights_only=False)
         except TypeError:  # PyTorch < 2.6
             self.data, self.slices = torch.load(self.processed_paths[0])
+        # Compatibility with caches created before the identifier was renamed.
+        # This is an in-memory metadata migration; graph inputs and targets are
+        # unchanged and the processed cache is not rewritten.
+        if hasattr(self._data, "molecule_index"):
+            self._data.molecule_id = self._data.molecule_index
+            del self._data.molecule_index
+            self.slices["molecule_id"] = self.slices.pop("molecule_index")
+        if hasattr(self._data, "raw_qm9_index"):
+            self._data.raw_qm9_id = self._data.raw_qm9_index
+            del self._data.raw_qm9_index
+            self.slices["raw_qm9_id"] = self.slices.pop("raw_qm9_index")
         with Path(self.processed_paths[1]).open(encoding="utf-8") as handle:
             self.preprocessing_metadata = json.load(handle)
         self._validate_cached_distance_domain()
@@ -147,37 +191,19 @@ class QM9GapDataset(InMemoryDataset):
         sdf_path = Path(source.raw_dir) / "gdb9.sdf"
         if not sdf_path.exists():
             raise FileNotFoundError(f"Expected hydrogen-explicit QM9 SDF at {sdf_path}")
-        supplier = Chem.SDMolSupplier(str(sdf_path), removeHs=False, sanitize=True)
+        supplier = Chem.SDMolSupplier(str(sdf_path), removeHs=False, sanitize=False)
 
         processed: list[Data] = []
         maximum_distance = 0.0
         maximum_index = -1
         for dataset_index, base_data in enumerate(source):
-            molecule = _sdf_molecule_for_data(supplier, base_data)
-            z, x_cat, atomic_mass = atom_features_from_rdkit(molecule)
-            edge_index = complete_directed_edge_index(z.numel())
-            distance = pairwise_edge_distances(base_data.pos, edge_index)
-            edge_chem = chemical_edge_features(molecule, edge_index)
+            graph = enriched_qm9_graph(supplier, base_data, dataset_index)
+            distance = graph.edge_distance
             local_maximum = float(distance.max()) if distance.numel() else 0.0
             if local_maximum > maximum_distance:
                 maximum_distance = local_maximum
                 maximum_index = dataset_index
-            gap = select_homo_lumo_gap(base_data.y).reshape(1)
-            processed.append(
-                Data(
-                    z=z,
-                    x_cat=x_cat,
-                    atomic_mass=atomic_mass,
-                    pos=base_data.pos.to(torch.float32),
-                    edge_index=edge_index,
-                    edge_distance=distance.to(torch.float32),
-                    edge_chem=edge_chem,
-                    y=gap.to(torch.float32),
-                    molecule_index=torch.tensor([dataset_index], dtype=torch.long),
-                    raw_qm9_index=torch.as_tensor(base_data.idx, dtype=torch.long).reshape(1),
-                    smiles=getattr(base_data, "smiles", ""),
-                )
-            )
+            processed.append(graph)
             if (dataset_index + 1) % 10000 == 0:
                 LOGGER.info("Processed %d/%d QM9 molecules", dataset_index + 1, len(source))
 
@@ -204,6 +230,7 @@ class QM9GapDataset(InMemoryDataset):
             "maximum_distance_molecule_index": maximum_index,
             "rbf_max_angstrom": self.rbf_max,
             "domain_policy": self.domain_policy,
+            "rdkit_sanitization": "all operations except SANITIZE_PROPERTIES",
         }
         with Path(self.processed_paths[1]).open("w", encoding="utf-8") as handle:
             json.dump(metadata, handle, indent=2, sort_keys=True)

@@ -10,7 +10,15 @@ export ENV_ACTIVATE=/absolute/path/to/venv/bin/activate
 export CONFIG_PATH=configs/base.yaml  # data and result roots are specified here
 ```
 
-Prepare data and create the immutable splits once, preferably on a data-transfer or CPU node:
+On Cannon, use `ENV_ACTIVATE=$PROJECT_DIR/slurm/cannon_env.sh`. The ignored `data`, `artifacts`, and `logs` paths should point to spacious project storage; see `docs/cannon.md`.
+
+Run the development-only real-QM9 GPU smoke test before full enriched preprocessing:
+
+```bash
+sbatch --account=<account> --partition=<gpu-partition> slurm/qm9_gpu_smoke.sbatch
+```
+
+Prepare data and validate the immutable splits once on a CPU compute node:
 
 ```bash
 cd "$PROJECT_DIR"
@@ -18,6 +26,8 @@ source "$ENV_ACTIVATE"
 python scripts/prepare_data.py
 python scripts/create_splits.py
 ```
+
+The equivalent batch entry point is `slurm/prepare_data.sbatch`.
 
 Submit all 144 CV experiments as one array. Array index `a` maps to configuration `floor(a/4)` and fold `a mod 4`:
 

@@ -1,0 +1,35 @@
+{
+  "best_epoch": 2,
+  "checkpoint_path": "artifacts/checkpoints/smoke/qm9_gpu_smoke.pt",
+  "curve_path": "results/smoke/qm9_gpu_smoke_curve.csv",
+  "data_scope": "development_only",
+  "data_source": "prepared_enriched_cache",
+  "epochs_completed": 2,
+  "execution_only": true,
+  "fold": 0,
+  "metadata": {
+    "cuda_version": "12.8",
+    "git_commit": "e5669893a9eeb6b1569a34fd9626841e511c14c3",
+    "gpu_model": "NVIDIA H200",
+    "hostname": "holygpu8a12202.rc.fas.harvard.edu",
+    "platform": "Linux-4.18.0-553.155.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python_version": "3.12.14",
+    "pytorch_geometric_version": "2.8.0.post1",
+    "pytorch_version": "2.10.0+cu128",
+    "rdkit_version": "2026.03.6",
+    "timestamp_utc": "2026-10-01T01:56:52.537006+00:00"
+  },
+  "num_source_molecules": 130831,
+  "num_training_molecules": 192,
+  "num_validation_molecules": 64,
+  "scientific_result": false,
+  "smoke_validation_metrics": {
+    "mae_ev": 1.1208365261554718,
+    "r2": 0.17077170031275601,
+    "rmse_ev": 1.3329086590137391
+  },
+  "target_standardization": {
+    "mean_ev": 7.698242728908856,
+    "standard_deviation_ev": 1.6780012317093806
+  }
+}

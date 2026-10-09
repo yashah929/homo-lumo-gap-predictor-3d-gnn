@@ -29,7 +29,7 @@ Distances are expanded in 50 Gaussian functions with centers \(\mu_k\) uniformly
 \gamma=(\mu_{k+1}-\mu_k)^{-2}.
 \]
 
-Preprocessing records the largest QM9 pairwise distance. The default policy raises an error if it exceeds the configured RBF upper bound by more than 0.1 Å; the domain is configurable and distances are never silently clipped.
+Preprocessing records the largest QM9 pairwise distance. A full scan found a 12.040427 Å explicit-hydrogen end-to-end distance in n-nonane, so the base configuration emits an explicit warning when the 10 Å RBF domain is exceeded. The preregistered RBF basis is unchanged, and distances are never cut off or clipped.
 
 ## Model
 
@@ -122,19 +122,34 @@ See `slurm/README.md` for dependencies and the submission order.
 
 ## Outputs and metrics
 
-The primary metric is MAE in eV. RMSE and \(R^2\) are also reported. `results/cv/cv_results.csv` contains fold-level records; `cv_summary.csv` contains configuration aggregates. Final evaluation writes `results/final/test_metrics.json`, molecule-level `test_predictions.csv`, and PDF/PNG diagnostic figures. Checkpoints and verbose run logs are ignored by Git; compact summaries, predictions, and figures are commit-ready.
+The primary metric is MAE in eV. RMSE and \(R^2\) are also reported. `results/cv/cv_results.csv` contains fold-level records; `cv_summary.csv` contains configuration aggregates. Final evaluation writes `results/final/test_metrics.json`, molecule-level `test_predictions.csv`, and PDF/PNG diagnostic figures. Checkpoints are stored separately under the configured `artifacts/checkpoints/` root and ignored by Git. Verbose run logs are also ignored; compact summaries, predictions, and figures are commit-ready.
 
 ### Final results
 
-> **Not yet computed.** Full QM9 cross-validation, final retraining, and locked test evaluation have not been run in this repository snapshot.
+All 144 cross-validation runs completed. The selected configuration was then initialized afresh and trained on all 104,664 development molecules for exactly 279 epochs. The locked test set was evaluated once after final training.
+
+#### Cross-validation
 
 | Quantity | Result |
 |---|---:|
-| Selected configuration | `TO_BE_FILLED_AFTER_CV` |
-| Final training epochs | `TO_BE_FILLED_AFTER_CV` |
-| Test MAE (eV) | `TO_BE_FILLED_AFTER_FINAL_TEST` |
-| Test RMSE (eV) | `TO_BE_FILLED_AFTER_FINAL_TEST` |
-| Test \(R^2\) | `TO_BE_FILLED_AFTER_FINAL_TEST` |
+| Selected configuration | `cfg_034` |
+| Message-passing layers | 6 |
+| Hidden dimension | 256 |
+| Adam learning rate | \(3\times10^{-4}\) |
+| Mean validation MAE | \(0.051359 \pm 0.001002\) eV |
+| Mean validation RMSE | 0.086402 eV |
+| Mean validation \(R^2\) | 0.995452 |
+
+#### Held-out test
+
+| Quantity | Result |
+|---|---:|
+| Test molecules | 26,167 |
+| MAE | 0.044720 eV |
+| RMSE | 0.071658 eV |
+| \(R^2\) | 0.996884 |
+
+The test MAE is 0.006639 eV (12.93%) lower than the mean cross-validation MAE. This difference indicates that held-out performance is broadly consistent with the cross-validation estimate; no model or hyperparameter changes were made after observing the test result.
 
 ## Reproducibility
 

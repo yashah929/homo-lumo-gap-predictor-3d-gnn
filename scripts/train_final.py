@@ -9,7 +9,15 @@ from pathlib import Path
 from qm9_gap.data import QM9GapDataset, load_split_indices, target_statistics
 from qm9_gap.model import QM9GapMPNN
 from qm9_gap.train import TargetStandardizer, make_loader, save_checkpoint, train_fixed_epochs
-from qm9_gap.utils import environment_metadata, load_yaml, save_json, save_yaml, seed_everything, select_device
+from qm9_gap.utils import (
+    environment_metadata,
+    load_yaml,
+    save_json,
+    save_yaml,
+    seed_everything,
+    select_device,
+    sha256_file,
+)
 
 
 def main() -> None:
@@ -76,12 +84,15 @@ def main() -> None:
         "target_standardization": standardizer.as_dict(),
         "metadata": metadata,
     }
-    checkpoint_path = final_root / "checkpoints" / "final_model.pt"
+    checkpoint_root = Path(base["paths"].get("checkpoints_dir", final_root / "checkpoints"))
+    checkpoint_path = checkpoint_root / "final" / "final_model.pt"
     save_checkpoint(checkpoint, checkpoint_path)
     run_record = {
         "training_stage": checkpoint["training_stage"],
         "split_identity": checkpoint["split_identity"],
         "checkpoint_path": str(checkpoint_path),
+        "checkpoint_size_bytes": checkpoint_path.stat().st_size,
+        "checkpoint_sha256": sha256_file(checkpoint_path),
         "selected_configuration": selected,
         "final_epochs": final_epochs,
         "seed": seed,

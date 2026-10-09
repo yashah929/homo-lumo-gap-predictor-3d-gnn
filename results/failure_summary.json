@@ -1,0 +1,22 @@
+{
+  "resolved_preflight_failures": [
+    {
+      "job_id": "49521580",
+      "stage": "real_qm9_gpu_smoke",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "cause": "RDKit strict sanitization rejected retained QM9 record gdb_106 with unusual formal valence.",
+      "correction": "Match PyG loading semantics and apply all RDKit sanitization operations except SANITIZE_PROPERTIES.",
+      "successful_replacement_job_id": "49523297"
+    },
+    {
+      "job_id": "49523608",
+      "stage": "full_qm9_preprocessing",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "cause": "Observed maximum pairwise distance 12.040427 A exceeded the configured 10.0 A RBF domain plus tolerance.",
+      "correction": "Preserve the specified 0-10 A RBF basis and switch the domain policy from error to explicit warning; distances remain uncut and unclipped.",
+      "successful_replacement_job_id": "49525496"
+    }
+  ]
+}

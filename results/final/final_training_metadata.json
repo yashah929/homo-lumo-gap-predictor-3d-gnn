@@ -1,0 +1,41 @@
+{
+  "checkpoint_path": "artifacts/checkpoints/final/final_model.pt",
+  "checkpoint_sha256": "d70a4fed212077f36542d6f172d2a44b776aafcca455c7907495dbbb4c243af0",
+  "checkpoint_size_bytes": 17194065,
+  "final_epochs": 279,
+  "metadata": {
+    "cuda_version": "12.8",
+    "git_commit": "e5669893a9eeb6b1569a34fd9626841e511c14c3",
+    "gpu_model": "NVIDIA H200",
+    "hostname": "holygpu8a12202.rc.fas.harvard.edu",
+    "platform": "Linux-4.18.0-553.155.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python_version": "3.12.14",
+    "pytorch_geometric_version": "2.8.0.post1",
+    "pytorch_version": "2.10.0+cu128",
+    "rdkit_version": "2026.03.6",
+    "timestamp_utc": "2026-10-09T00:34:25.524721+00:00"
+  },
+  "seed": 4242,
+  "selected_configuration": {
+    "configuration_id": "cfg_034",
+    "final_epochs": 279,
+    "fold_best_epochs": [
+      281,
+      270,
+      277,
+      288
+    ],
+    "hidden_dim": 256,
+    "learning_rate": 0.0003,
+    "mean_validation_mae_ev": 0.05135894931302125,
+    "num_message_passing_layers": 6,
+    "selection_metric": "mean_validation_mae_ev",
+    "std_validation_mae_ev": 0.0010016829826280402
+  },
+  "split_identity": "seed42_80-20_development_test_fourfold_v1",
+  "target_standardization": {
+    "mean_ev": 6.856073367810255,
+    "standard_deviation_ev": 1.2842875138621057
+  },
+  "training_stage": "final_development_retraining"
+}

@@ -4,12 +4,13 @@ paths:
   data_root: data/qm9_gap
   splits_dir: splits
   results_dir: results
+  checkpoints_dir: artifacts/checkpoints
 dataset:
   expected_num_molecules: 130831
   target_index: 4
   target_name: gap
   target_unit: eV
-  rbf_domain_policy: error
+  rbf_domain_policy: warn
   rbf_domain_tolerance: 0.1
 model:
   hidden_dim: 128

@@ -9,7 +9,8 @@ __pycache__/
 venv/
 
 # Data and cached molecular graphs
-data/
+/data
+/artifacts
 *.pt
 *.pth
 *.ckpt
@@ -18,7 +19,7 @@ data/
 results/**/checkpoints/
 results/**/runs/
 results/**/curves/
-logs/
+/logs
 slurm-*.out
 *.log
 

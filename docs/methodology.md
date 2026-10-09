@@ -4,7 +4,7 @@
 
 For each molecule, the objective is to predict the direct QM9 HOMO–LUMO gap \(y=\Delta E_{\mathrm{HOMO-LUMO}}\) in eV. Inputs consist of molecular composition, covalent connectivity, local chemical categories, and equilibrium Cartesian geometry. The implementation excludes partial charges, orbital energies, total or atomization energies, and any descriptor derived from a quantum-mechanical target calculation. Although QM9 provides HOMO and LUMO energies, neither is an input or a separately learned target.
 
-PyTorch Geometric stores QM9 properties in a fixed vector. The code asserts that index 4 is named `gap` before extracting it. The original hydrogen-explicit SDF is used to obtain RDKit chemical attributes in the same atom order as PyG coordinates; atomic-number sequences are compared and processing fails on a mismatch.
+PyTorch Geometric stores QM9 properties in a fixed vector. The code asserts that index 4 is named `gap` before extracting it. The original hydrogen-explicit SDF is used to obtain RDKit chemical attributes in the same atom order as PyG coordinates; atomic-number sequences are compared and processing fails on a mismatch. As in PyG's QM9 loader, SDF records are read without initial strict sanitization because a small number have unusual formal valences. RDKit then performs all sanitization operations except strict property/valence validation, preserving deterministic hybridization, ring, conjugation, and chirality assignment for every retained record.
 
 ## Graph definition
 
@@ -58,7 +58,7 @@ and the expansion is
 \phi_k(d_{ji})=\exp[-\gamma(d_{ji}-\mu_k)^2].
 \]
 
-At one neighboring center's displacement a basis has value \(e^{-1}\), producing smooth overlap. Values outside the interval are evaluated without clipping; preprocessing reports the maximum distance and, by default, raises if it exceeds \(b+0.1\) Å.
+At one neighboring center's displacement a basis has value \(e^{-1}\), producing smooth overlap. Values outside the interval are evaluated without clipping. Full preprocessing reports a maximum pairwise distance of 12.040427 Å for the terminal explicit hydrogens of n-nonane. The base configuration therefore warns on this known domain exceedance while preserving the specified 0–10 Å centers and evaluating every complete-graph edge.
 
 The chemical vector \(c_{ji}\in\mathbb R^7\) contains a bonded indicator; single, double, triple, and aromatic indicators; conjugation; and bond-ring membership. If \(\{i,j\}\notin B\), then \(c_{ji}=0\). Geometry and bond information form one representation on one topology:
 

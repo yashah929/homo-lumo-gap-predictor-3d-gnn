@@ -1,0 +1,51 @@
+base:
+  seed: 42
+  final_seed: 4242
+  paths:
+    data_root: data/qm9_gap
+    splits_dir: splits
+    results_dir: results
+    checkpoints_dir: artifacts/checkpoints
+  dataset:
+    expected_num_molecules: 130831
+    target_index: 4
+    target_name: gap
+    target_unit: eV
+    rbf_domain_policy: warn
+    rbf_domain_tolerance: 0.1
+  model:
+    hidden_dim: 128
+    num_message_passing_layers: 4
+    num_rbf: 50
+    rbf_min: 0.0
+    rbf_max: 10.0
+    dropout: 0.1
+    set2set_steps: 3
+    max_atomic_number: 100
+  training:
+    batch_size: 128
+    num_workers: 4
+    max_epochs: 300
+    patience: 30
+    learning_rate: 0.0003
+    weight_decay: 0.0
+    scheduler:
+      name: cosine
+      eta_min: 0.0
+    device: auto
+    pin_memory: true
+selected:
+  configuration_id: cfg_034
+  num_message_passing_layers: 6
+  hidden_dim: 256
+  learning_rate: 0.0003
+  fold_best_epochs:
+  - 281
+  - 270
+  - 277
+  - 288
+  final_epochs: 279
+  selection_metric: mean_validation_mae_ev
+  mean_validation_mae_ev: 0.05135894931302125
+  std_validation_mae_ev: 0.0010016829826280402
+final_seed: 4242

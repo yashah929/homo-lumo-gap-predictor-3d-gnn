@@ -8,7 +8,9 @@ Some GPU scatter/reduction kernels and version-dependent vendor libraries may re
 
 ## Data identity
 
-`scripts/prepare_data.py` downloads QM9 through PyG, reads the original SDF with explicit hydrogen retention, verifies atom-order identity, creates complete directed graphs, and writes an ignored processed cache. Its metadata records molecule count, target identity, maximum pairwise distance, and RBF-domain policy. Processing fails if the PyG usable count differs from 130,831.
+`scripts/prepare_data.py` downloads QM9 through PyG, reads the original SDF with explicit hydrogen retention, applies all RDKit sanitization operations except strict property/valence validation, verifies atom-order identity, creates complete directed graphs, and writes an ignored processed cache. This matches PyG's need to admit retained QM9 records with unusual formal valences while still assigning the chemical features used here. Its metadata records molecule count, target identity, sanitization policy, maximum pairwise distance, and RBF-domain policy. Processing fails if the PyG usable count differs from 130,831.
+
+The maximum observed pairwise distance is 12.040427 Å, from the terminal explicit hydrogens of n-nonane. Because the scientific design fixes 50 RBF centers on 0–10 Å and specifies evaluation without clipping, the base configuration warns rather than aborts for this known exceedance.
 
 Versioned files in `splits/` define the development set, locked final test set, and four validation folds. `split_manifest.json` records the generation algorithm, counts, and SHA-256 checksum of every array. Existing splits are not replaced unless `--force` is supplied.
 
@@ -31,4 +33,14 @@ CV loads `development_indices.npy` and one validation-fold file. It does not rea
 
 ## Archiving a completed study
 
-Commit source, configuration, split arrays, compact CSV/JSON/YAML records, test predictions, and PDF/PNG figures. Do not commit downloaded data, processed graph caches, checkpoints, scheduler output, or verbose logs. Before publication, record the environment with `python -m pip freeze`, retain the Git commit used for training, run `pytest`, and replace only the clearly marked README result placeholders after the final test command.
+Commit source, configuration, split arrays, compact CSV/JSON/YAML records, test predictions, and PDF/PNG figures. Do not commit downloaded data, processed graph caches, checkpoints, scheduler output, or verbose logs. The completed run manifest records the package freeze, training Git base commit, Slurm job identities, split hashes, selected configuration, final checkpoint identity, and held-out metrics.
+
+Before publication, run:
+
+```bash
+python scripts/validate_results.py
+pytest
+python -m pip check
+```
+
+The result validator independently recomputes metrics from the prediction CSV and checks that its unique molecule identifiers equal the immutable final-test split with no development-set overlap. During final validation, an identifier-only output issue was corrected: PyG had interpreted the legacy `molecule_index` graph attribute as a node-index tensor and added batching offsets. The completed non-shuffled loader order and reference values provided a deterministic alignment back to the immutable test indices. Reference values, predictions, residuals, and aggregate metrics were not changed. Graph metadata now use `molecule_id` and `raw_qm9_id`, which PyG does not increment during batching; the original and corrected prediction-file hashes are retained in `results/run_manifest.json`.

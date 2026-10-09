@@ -1,0 +1,21 @@
+{
+  "checkpoint": "artifacts/checkpoints/final/final_model.pt",
+  "evaluation_stage": "locked_final_test",
+  "mae_ev": 0.04472012408130392,
+  "metadata": {
+    "cuda_version": "12.8",
+    "git_commit": "e5669893a9eeb6b1569a34fd9626841e511c14c3",
+    "gpu_model": "NVIDIA H200",
+    "hostname": "holygpu8a12402.rc.fas.harvard.edu",
+    "platform": "Linux-4.18.0-553.155.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python_version": "3.12.14",
+    "pytorch_geometric_version": "2.8.0.post1",
+    "pytorch_version": "2.10.0+cu128",
+    "rdkit_version": "2026.03.6",
+    "timestamp_utc": "2026-10-09T00:52:55.971549+00:00"
+  },
+  "num_test_molecules": 26167,
+  "r2": 0.9968835860381843,
+  "rmse_ev": 0.07165805939854325,
+  "split_identity": "seed42_80-20_development_test_fourfold_v1"
+}

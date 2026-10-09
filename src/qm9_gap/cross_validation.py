@@ -94,7 +94,8 @@ def run_cv_experiment(
     )
     run_name = f"{experiment['configuration_id']}_fold_{fold}"
     results_root = Path(paths["results_dir"]) / "cv"
-    checkpoint_path = results_root / "checkpoints" / f"{run_name}.pt"
+    checkpoint_root = Path(paths.get("checkpoints_dir", results_root / "checkpoints"))
+    checkpoint_path = checkpoint_root / "cv" / f"{run_name}.pt"
     curve_path = results_root / "curves" / f"{run_name}.csv"
     run_path = results_root / "runs" / f"{run_name}.json"
     curve_path.parent.mkdir(parents=True, exist_ok=True)

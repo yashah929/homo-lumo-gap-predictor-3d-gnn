@@ -100,7 +100,7 @@ def predict(
         prediction_ev = standardizer.inverse(model(batch))
         references.append(batch.y.reshape(-1).detach().cpu().numpy())
         predictions.append(prediction_ev.detach().cpu().numpy())
-        molecule_indices.append(batch.molecule_index.reshape(-1).detach().cpu().numpy())
+        molecule_indices.append(batch.molecule_id.reshape(-1).detach().cpu().numpy())
     return (
         np.concatenate(references),
         np.concatenate(predictions),

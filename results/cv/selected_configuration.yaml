@@ -1,0 +1,13 @@
+configuration_id: cfg_034
+num_message_passing_layers: 6
+hidden_dim: 256
+learning_rate: 0.0003
+fold_best_epochs:
+- 281
+- 270
+- 277
+- 288
+final_epochs: 279
+selection_metric: mean_validation_mae_ev
+mean_validation_mae_ev: 0.05135894931302125
+std_validation_mae_ev: 0.0010016829826280402

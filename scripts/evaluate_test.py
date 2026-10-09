@@ -7,6 +7,8 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
+
 from qm9_gap.data import QM9GapDataset, load_split_indices
 from qm9_gap.evaluate import evaluate_loader, load_final_checkpoint
 from qm9_gap.plotting import plot_test_diagnostics
@@ -17,7 +19,7 @@ from qm9_gap.utils import environment_metadata, load_yaml, save_json, select_dev
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/base.yaml")
-    parser.add_argument("--checkpoint", default="results/final/checkpoints/final_model.pt")
+    parser.add_argument("--checkpoint", default=None)
     parser.add_argument(
         "--confirm-final-test",
         action="store_true",
@@ -27,9 +29,13 @@ def main() -> None:
     if not args.confirm_final_test:
         parser.error("Refusing to access final-test indices without --confirm-final-test")
     base = load_yaml(args.config)
+    checkpoint_path = args.checkpoint
+    if checkpoint_path is None:
+        checkpoint_root = Path(base["paths"].get("checkpoints_dir", "results/final/checkpoints"))
+        checkpoint_path = str(checkpoint_root / "final" / "final_model.pt")
     training = base["training"]
     device = select_device(training["device"])
-    model, standardizer, checkpoint = load_final_checkpoint(args.checkpoint, device)
+    model, standardizer, checkpoint = load_final_checkpoint(checkpoint_path, device)
     dataset = QM9GapDataset(
         base["paths"]["data_root"],
         rbf_max=checkpoint["model_config"]["rbf_max"],
@@ -47,6 +53,15 @@ def main() -> None:
         bool(training["pin_memory"]),
     )
     metrics, predictions = evaluate_loader(model, loader, standardizer, device)
+    prediction_ids = predictions["molecule_index"].to_numpy(dtype=np.int64)
+    if len(predictions) != len(test_indices):
+        raise RuntimeError("Final-test prediction count does not match the locked split")
+    if not np.array_equal(np.sort(prediction_ids), np.sort(test_indices)):
+        raise RuntimeError("Final-test prediction identifiers do not match the locked split")
+    if not np.isfinite(
+        predictions[["reference_gap_ev", "predicted_gap_ev", "residual_ev"]].to_numpy()
+    ).all():
+        raise RuntimeError("Final-test predictions contain non-finite values")
     final_root = Path(base["paths"]["results_dir"]) / "final"
     predictions.to_csv(final_root / "test_predictions.csv", index=False)
     metrics_record = {
@@ -56,7 +71,7 @@ def main() -> None:
         "rmse_ev": metrics["rmse_ev"],
         "r2": metrics["r2"],
         "num_test_molecules": len(predictions),
-        "checkpoint": str(args.checkpoint),
+        "checkpoint": checkpoint_path,
         "metadata": environment_metadata(),
     }
     save_json(metrics_record, final_root / "test_metrics.json")
