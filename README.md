@@ -1,6 +1,6 @@
 # HOMO–LUMO Gap Prediction in QM9 with a Three-Dimensional Message-Passing Neural Network
 
-## Scientific objective
+## Project overview
 
 This repository implements a reproducible molecular machine-learning pipeline for learning
 
@@ -8,15 +8,84 @@ This repository implements a reproducible molecular machine-learning pipeline fo
 f(G) \longrightarrow \Delta E_{\mathrm{HOMO-LUMO}}
 \]
 
-from molecular identity, bonding, and equilibrium three-dimensional geometry. The scalar target is the HOMO–LUMO gap supplied by QM9, in electron volts (eV); HOMO and LUMO energies are not predicted separately. The project does not currently specify a software license.
+from molecular identity, bonding, and equilibrium three-dimensional geometry. The scalar target is the HOMO–LUMO gap supplied by QM9, in electron volts (eV); HOMO and LUMO energies are not predicted separately. The model uses complete directed molecular graphs, distance-based geometric features, gated message passing, and permutation-invariant molecular pooling. The project does not currently specify a software license.
 
-## Dataset and target
+## Headline held-out result
 
-QM9 contains equilibrium geometries and computed properties for approximately 134,000 small organic molecules containing C, N, O, F, and H; the PyTorch Geometric release retains 130,831 usable structures after excluding uncharacterized entries. Data are downloaded through `torch_geometric.datasets.QM9` and are not committed.
+> - **Dataset:** 130,831 usable QM9 molecules
+> - **Development set:** 104,664 molecules
+> - **Locked test set:** 26,167 molecules
+> - **Model selection:** 36 configurations / 144 four-fold CV runs
+> - **Held-out MAE:** 0.044720 eV
+> - **Held-out RMSE:** 0.071658 eV
+> - **Held-out \(R^2\):** 0.996884
+
+The locked test set was evaluated once after cross-validation, configuration selection, and fresh training on the complete development set. No model or hyperparameter changes were made after the held-out result was observed.
+
+![Density-aware predicted versus reference HOMO-LUMO gaps for the locked test set](results/figures/predicted_vs_reference.png)
+
+*Held-out predictions for all 26,167 locked test molecules. Hexagon color encodes local molecule count; the diagonal is the identity line. Metrics are read from the committed final evaluation record.*
+
+## Model in plain language
+
+Each molecule is represented as a graph whose nodes are atoms. Every atom is connected to every other atom in both directions, allowing the model to use the full molecular geometry. Atom descriptors and chemical bond indicators provide chemical context. The equilibrium coordinates are not passed directly to the network: each atomic pair is reduced to its Euclidean distance, and that distance is expanded in 50 Gaussian radial basis functions. Six message-passing blocks iteratively update atom representations using this geometric and chemical context. Set2Set pooling forms a single molecular representation, from which a multilayer perceptron predicts the HOMO–LUMO gap.
+
+## Architecture
+
+![Architecture of the complete-graph three-dimensional message-passing model](results/figures/model_architecture.png)
+
+*Chemical features and the distance-derived geometric pathway meet in the message-passing blocks. Geometry enters only through pairwise distances, so raw xyz coordinates are not model inputs.*
+
+## Results and model selection
+
+All 144 cross-validation runs completed. Selection used only validation performance on the development set. The selected configuration, `cfg_034`, was initialized afresh and trained on all 104,664 development molecules for exactly 279 epochs before the single locked-test evaluation.
+
+### Cross-validation selection
+
+| Quantity | Selected result |
+|---|---:|
+| Configuration | `cfg_034` |
+| Message-passing layers | 6 |
+| Hidden dimension | 256 |
+| Adam learning rate | \(3\times10^{-4}\) |
+| Mean four-fold validation MAE | \(0.051359 \pm 0.001002\) eV |
+| Mean four-fold validation RMSE | 0.086402 eV |
+| Mean four-fold validation \(R^2\) | 0.995452 |
+
+![Full 36-configuration cross-validation search](results/figures/cv_validation_mae.png)
+
+*The complete 4 × 3 × 3 search over message-passing depth, hidden dimension, and learning rate. Points are four-fold validation means and error bars are fold-to-fold standard deviations.*
+
+![Validation learning curves for the selected configuration](results/figures/selected_cv_training_curves.png)
+
+*Unsmoothed validation-MAE paths for the four folds of `cfg_034`. Colored markers identify each fold's exact best epoch; the dashed line marks the final training duration of 279 epochs.*
+
+### Locked held-out test
+
+| Quantity | Held-out result |
+|---|---:|
+| Test molecules | 26,167 |
+| MAE | 0.044720 eV |
+| RMSE | 0.071658 eV |
+| \(R^2\) | 0.996884 |
+
+The held-out MAE is 0.006639 eV (12.93%) lower than the mean cross-validation MAE. This comparison is descriptive: cross-validation estimates were used for model selection, whereas the locked test set was reserved for the final evaluation.
+
+| Residual distribution | Residual versus reference gap |
+|---|---|
+| ![Histogram and KDE of held-out residuals](results/figures/residual_distribution.png) | ![Density-aware residuals versus reference gap](results/figures/residual_vs_reference.png) |
+
+*Residuals are defined as predicted gap minus reference gap. The distribution shows the zero, mean, and median residuals without removing outliers; the residual plot overlays a binned median trend to expose systematic bias.*
+
+## Detailed molecular representation and model equations
+
+### Dataset and target
+
+QM9 contains equilibrium geometries and computed properties for approximately 134,000 small organic molecules containing C, N, O, F, and H. The PyTorch Geometric release retains 130,831 usable structures after excluding uncharacterized entries. Data are downloaded through `torch_geometric.datasets.QM9` and are not committed.
 
 The implementation explicitly asserts that PyG target index 4 is named `gap`. PyG expresses this target in eV. Atomic coordinates and the direct gap target are retained; partial charges, orbital quantities, DFT energies, and target-derived descriptors are excluded from the inputs.
 
-## Molecular representation
+### Complete directed graph and features
 
 Explicit hydrogens remain graph nodes. Each atom is represented by atomic number, degree, formal charge, hybridization, aromaticity, total valence, ring membership, atomic mass, and chiral tag. Atomic number and categorical chemical attributes use learned embeddings followed by a learned projection.
 
@@ -31,7 +100,7 @@ Distances are expanded in 50 Gaussian functions with centers \(\mu_k\) uniformly
 
 Preprocessing records the largest QM9 pairwise distance. A full scan found a 12.040427 Å explicit-hydrogen end-to-end distance in n-nonane, so the base configuration emits an explicit warning when the 10 Å RBF domain is exceeded. The preregistered RBF basis is unchanged, and distances are never cut off or clipped.
 
-## Model
+### Message passing and molecular readout
 
 At message-passing layer \(t\), an edge MLP maps the concatenated RBF and chemical edge representation \(z_{ji}\) to a hidden-dimensional filter. A separate linear map transforms the sender state:
 
@@ -62,9 +131,9 @@ The full preregistered grid contains 36 configurations:
 
 Four folds give 144 independent runs. Adam minimizes MSE on the standardized training-fold target. Each fold computes its own target mean and population standard deviation from training targets only. Validation predictions are returned to eV for MAE, RMSE, and \(R^2\). Cosine annealing is epoch-based. CV uses at most 300 epochs, patience 30, and checkpoint selection by validation MAE in eV.
 
-Selection minimizes mean four-fold validation MAE. Ties are ordered by lower MAE standard deviation, smaller hidden dimension, then fewer layers. The final epoch count is the nearest integer to the median of the four selected-fold best epochs (half values round upward). A fresh model initialized with seed 4242 is trained for exactly this many epochs on all development molecules. It uses target statistics recomputed from the complete development set and no validation-based decision. The test set is accessed only by `scripts/evaluate_test.py`, which requires `--confirm-final-test`.
+Selection minimizes mean four-fold validation MAE. Ties are ordered by lower MAE standard deviation, smaller hidden dimension, then fewer layers. The final epoch count is the nearest integer to the median of the four selected-fold best epochs, with half values rounded upward. A fresh model initialized with seed 4242 is trained for exactly this many epochs on all development molecules. It uses target statistics recomputed from the complete development set and no validation-based decision. The test set is accessed only by `scripts/evaluate_test.py`, which requires `--confirm-final-test`.
 
-## Installation
+## Installation and workflows
 
 Python 3.10 or later is required. Install a PyTorch build appropriate for the local CUDA runtime first when necessary, then install the project:
 
@@ -80,7 +149,7 @@ pytest
 
 CUDA is selected automatically when available. CPU execution supports tests and small experiments.
 
-## Local workflow
+### Local workflow
 
 The commands below must be run from the repository root.
 
@@ -101,7 +170,13 @@ python scripts/evaluate_test.py --confirm-final-test
 
 `scripts/smoke_test.py` performs a three-epoch synthetic CPU run without downloading QM9. It verifies execution, not scientific performance.
 
-## SLURM workflow
+Figures can be regenerated independently from the committed result artifacts; this command does not train a model or access the locked test split:
+
+```bash
+python scripts/generate_figures.py
+```
+
+### SLURM workflow
 
 Cluster scripts contain no institution-specific account, partition, or path. Submit-site options can be supplied to `sbatch`, while project and environment paths are environment variables:
 
@@ -118,47 +193,20 @@ sbatch --account=<account> --partition=<gpu-partition> --gres=gpu:1 slurm/train_
 sbatch --account=<account> --partition=<gpu-partition> --gres=gpu:1 slurm/evaluate_test.sbatch
 ```
 
-See `slurm/README.md` for dependencies and the submission order.
-
-## Outputs and metrics
-
-The primary metric is MAE in eV. RMSE and \(R^2\) are also reported. `results/cv/cv_results.csv` contains fold-level records; `cv_summary.csv` contains configuration aggregates. Final evaluation writes `results/final/test_metrics.json`, molecule-level `test_predictions.csv`, and PDF/PNG diagnostic figures. Checkpoints are stored separately under the configured `artifacts/checkpoints/` root and ignored by Git. Verbose run logs are also ignored; compact summaries, predictions, and figures are commit-ready.
-
-### Final results
-
-All 144 cross-validation runs completed. The selected configuration was then initialized afresh and trained on all 104,664 development molecules for exactly 279 epochs. The locked test set was evaluated once after final training.
-
-#### Cross-validation
-
-| Quantity | Result |
-|---|---:|
-| Selected configuration | `cfg_034` |
-| Message-passing layers | 6 |
-| Hidden dimension | 256 |
-| Adam learning rate | \(3\times10^{-4}\) |
-| Mean validation MAE | \(0.051359 \pm 0.001002\) eV |
-| Mean validation RMSE | 0.086402 eV |
-| Mean validation \(R^2\) | 0.995452 |
-
-#### Held-out test
-
-| Quantity | Result |
-|---|---:|
-| Test molecules | 26,167 |
-| MAE | 0.044720 eV |
-| RMSE | 0.071658 eV |
-| \(R^2\) | 0.996884 |
-
-The test MAE is 0.006639 eV (12.93%) lower than the mean cross-validation MAE. This difference indicates that held-out performance is broadly consistent with the cross-validation estimate; no model or hyperparameter changes were made after observing the test result.
+See `slurm/README.md` for dependencies and submission order.
 
 ## Reproducibility
 
-Every run records seeds, complete configuration, split identity, timestamp, hostname, Git commit, Python/PyTorch/PyG/RDKit/CUDA versions, and GPU model. Python, NumPy, PyTorch CPU, and PyTorch CUDA RNGs are seeded. Deterministic algorithms are requested with warnings for unsupported operations. Exact split arrays and SHA-256 hashes are versioned in `splits/`. Further details are in `docs/reproducibility.md`; equations and feature definitions are in `docs/methodology.md`.
+The primary metric is MAE in eV; RMSE and \(R^2\) are also reported. `results/cv/cv_results.csv` contains fold-level records, `results/cv/cv_summary.csv` contains configuration aggregates, and `results/final/test_predictions.csv` contains the molecule-level locked-test references, predictions, and residuals used in the diagnostic figures. PNG figures are generated at 300 dpi, with matching PDF versions.
+
+Every run records seeds, complete configuration, split identity, timestamp, hostname, Git commit, Python/PyTorch/PyG/RDKit/CUDA versions, and GPU model. Python, NumPy, PyTorch CPU, and PyTorch CUDA RNGs are seeded. Deterministic algorithms are requested with warnings for unsupported operations. Exact split arrays and SHA-256 hashes are versioned in `splits/`. Checkpoints are stored separately under the configured `artifacts/checkpoints/` root and ignored by Git. Verbose run logs are also ignored; compact summaries, predictions, and figures are commit-ready.
+
+Further details are in `docs/reproducibility.md`; equations and feature definitions are in `docs/methodology.md`.
 
 ## References
 
 - Ramakrishnan, R.; Dral, P. O.; Rupp, M.; von Lilienfeld, O. A. “Quantum Chemistry Structures and Properties of 134 Kilo Molecules.” *Scientific Data* **1**, 140022 (2014).
-- Gilmer, J.; Schoenholz, S. S.; Riley, P. F.; Vinyals, O.; Dahl, G. E. “Neural Message Passing for Quantum Chemistry.” *Proceedings of ICML* (2017).
+- Gilmer, J.; Schoenholz, S. S.; Riley, P.; Vinyals, O.; Dahl, G. “Neural Message Passing for Quantum Chemistry.” *Proceedings of ICML* (2017).
 - Schütt, K. T. et al. “SchNet: A Continuous-filter Convolutional Neural Network for Modeling Quantum Interactions.” *NeurIPS* (2017).
 - Sanchez-Lengeling, B. et al. “A Principal Odor Map Unifies Diverse Tasks in Olfactory Perception.” *Science* **381**, 999–1006 (2023).
 

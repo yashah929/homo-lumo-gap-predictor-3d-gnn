@@ -113,6 +113,7 @@ def main() -> None:
         "residual_vs_reference",
         "cv_validation_mae",
         "selected_cv_training_curves",
+        "model_architecture",
     )
     for name in figure_names:
         for extension in ("png", "pdf"):

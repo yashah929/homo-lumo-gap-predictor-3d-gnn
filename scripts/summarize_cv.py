@@ -25,12 +25,20 @@ def main() -> None:
     summary.to_csv(cv_root / "cv_summary.csv", index=False)
     save_yaml(selected, cv_root / "selected_configuration.yaml")
     plot_cv_summary(summary, results / "figures" / "cv_validation_mae")
-    curves, labels = [], []
+    curves = []
     for fold in range(4):
         path = cv_root / "curves" / f"{selected['configuration_id']}_fold_{fold}.csv"
-        curves.append(pd.read_csv(path))
-        labels.append(f"Fold {fold + 1}")
-    plot_training_curves(curves, labels, results / "figures" / "selected_cv_training_curves")
+        curve = pd.read_csv(path)
+        curve["fold"] = fold
+        curves.append(curve)
+    curve_table = pd.concat(curves, ignore_index=True)
+    selected_runs = detailed[detailed["configuration_id"] == selected["configuration_id"]]
+    plot_training_curves(
+        curve_table,
+        selected_runs,
+        int(selected["final_epochs"]),
+        results / "figures" / "selected_cv_training_curves",
+    )
     print(f"Selected {selected['configuration_id']} for {selected['final_epochs']} final epochs")
 
 

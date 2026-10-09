@@ -75,7 +75,11 @@ def main() -> None:
         "metadata": environment_metadata(),
     }
     save_json(metrics_record, final_root / "test_metrics.json")
-    plot_test_diagnostics(predictions, Path(base["paths"]["results_dir"]) / "figures")
+    plot_test_diagnostics(
+        predictions,
+        metrics_record,
+        Path(base["paths"]["results_dir"]) / "figures",
+    )
     print(json.dumps(metrics_record, indent=2))
 
 
