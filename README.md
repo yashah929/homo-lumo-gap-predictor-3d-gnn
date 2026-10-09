@@ -36,7 +36,7 @@ Each molecule is represented as a graph whose nodes are atoms. Every atom is con
 
 ![High-level molecule-to-gap prediction flow](results/figures/model_overview.png)
 
-*A nine-heavy-atom molecule with formula C₆H₆O₃ is converted to a complete geometric graph, processed by the message-passing network and molecular pooling, then passed through the prediction MLP. Can you identify it? The single output is the HOMO–LUMO energy separation, conventionally shown as the gap between the occupied HOMO and unoccupied LUMO levels.*
+*A nine-heavy-atom molecule with formula C₆H₆O₃ is converted to a complete geometric graph, processed by the message-passing network and molecular pooling, then passed through the prediction MLP. The single output is the HOMO–LUMO energy separation, conventionally shown as the gap between the occupied HOMO and unoccupied LUMO levels.*
 
 ### Detailed feature flow
 

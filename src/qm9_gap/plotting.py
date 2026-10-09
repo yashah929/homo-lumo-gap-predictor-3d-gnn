@@ -718,7 +718,7 @@ def plot_model_overview(output_stem: str | Path) -> None:
     axis.text(
         2.4,
         0.92,
-        "Can you guess the molecule?\nC₆H₆O₃  •  9 heavy atoms",
+        "C₆H₆O₃  •  9 heavy atoms",
         ha="center",
         fontsize=8.8,
     )
