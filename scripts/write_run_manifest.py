@@ -108,6 +108,7 @@ def main() -> None:
     result_files = [
         "results/cv/cv_results.csv",
         "results/cv/cv_summary.csv",
+        "results/cv/selected_cv_training_curves.csv",
         "results/cv/selected_configuration.yaml",
         "results/final/final_training_config.yaml",
         "results/final/final_training_curve.csv",
@@ -122,6 +123,8 @@ def main() -> None:
                 "residual_vs_reference",
                 "cv_validation_mae",
                 "selected_cv_training_curves",
+                "model_overview",
+                "model_architecture",
             )
             for extension in ("png", "pdf")
         ],

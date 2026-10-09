@@ -47,8 +47,9 @@ def main() -> None:
         int(selected["final_epochs"]),
         figures / "selected_cv_training_curves",
     )
+    plotting.plot_model_overview(figures / "model_overview")
     plotting.plot_architecture(figures / "model_architecture")
-    print(f"Regenerated six PNG/PDF figure pairs in {figures}")
+    print(f"Regenerated seven PNG/PDF figure pairs in {figures}")
 
 
 if __name__ == "__main__":

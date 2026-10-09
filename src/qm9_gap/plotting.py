@@ -596,3 +596,248 @@ def plot_architecture(output_stem: str | Path) -> None:
     axis.text(5.75, 5.07, "Chemical pathway", ha="center", fontsize=8.5, color="#637084")
     axis.text(6.95, 2.13, "Geometric pathway", ha="center", fontsize=8.5, color="#637084")
     _save_figure(figure, output_stem)
+
+
+def plot_model_overview(output_stem: str | Path) -> None:
+    """Draw an intuitive molecule-to-scalar overview of the prediction task."""
+
+    apply_plot_style()
+    palette = sns.color_palette("Set2", n_colors=8)
+    figure, axis = plt.subplots(figsize=(13.2, 4.25), constrained_layout=True)
+    axis.set_xlim(0, 20)
+    axis.set_ylim(0, 6.2)
+    axis.axis("off")
+
+    stages = [
+        (0.25, 4.35, palette[0], "1  Molecular input"),
+        (5.05, 4.15, palette[1], "2  Geometric GNN"),
+        (9.65, 4.0, palette[2], "3  Prediction MLP"),
+        (14.1, 5.65, palette[3], "4  Scalar gap"),
+    ]
+    for x, width, color, title in stages:
+        panel = FancyBboxPatch(
+            (x, 0.35),
+            width,
+            5.35,
+            boxstyle="round,pad=0.04,rounding_size=0.15",
+            facecolor=sns.light_palette(color, n_colors=8)[1],
+            edgecolor=color,
+            linewidth=1.2,
+            zorder=0,
+        )
+        axis.add_patch(panel)
+        axis.text(
+            x + 0.25,
+            5.38,
+            title,
+            ha="left",
+            va="center",
+            fontsize=10.0,
+            fontweight="bold",
+            color=TEXT_COLOR,
+        )
+
+    # Representative QM9 molecule: ethanol, shown as a ball-and-stick structure.
+    molecule_origin = np.array([2.4, 3.0])
+    molecule_scale = 0.88
+    atoms = {
+        "C1": (np.array([-1.05, 0.05]), "C", 250),
+        "C2": (np.array([0.15, 0.28]), "C", 250),
+        "O": (np.array([1.28, -0.20]), "O", 265),
+        "H1": (np.array([-1.55, 0.82]), "H", 105),
+        "H2": (np.array([-1.55, -0.72]), "H", 105),
+        "H3": (np.array([-1.05, -0.92]), "H", 105),
+        "H4": (np.array([0.25, 1.18]), "H", 105),
+        "H5": (np.array([0.28, -0.72]), "H", 105),
+        "HO": (np.array([1.95, 0.34]), "H", 105),
+    }
+    bonds = [
+        ("C1", "C2"),
+        ("C2", "O"),
+        ("C1", "H1"),
+        ("C1", "H2"),
+        ("C1", "H3"),
+        ("C2", "H4"),
+        ("C2", "H5"),
+        ("O", "HO"),
+    ]
+    mapped_atoms = {
+        key: (molecule_origin + molecule_scale * value[0], value[1], value[2])
+        for key, value in atoms.items()
+    }
+    for first, second in bonds:
+        start = mapped_atoms[first][0]
+        end = mapped_atoms[second][0]
+        axis.plot(
+            [start[0], end[0]],
+            [start[1], end[1]],
+            color="#788699",
+            linewidth=3.0,
+            solid_capstyle="round",
+            zorder=1,
+        )
+    atom_colors = {"C": "#39414D", "O": "#E05A5A", "H": "#F7F9FC"}
+    atom_edges = {"C": "#202733", "O": "#B63D48", "H": "#AEB8C5"}
+    for position, element, size in mapped_atoms.values():
+        axis.scatter(
+            position[0],
+            position[1],
+            s=size,
+            facecolor=atom_colors[element],
+            edgecolor=atom_edges[element],
+            linewidth=1.25,
+            zorder=3,
+        )
+        if element != "H":
+            axis.text(
+                position[0],
+                position[1],
+                element,
+                ha="center",
+                va="center",
+                color="white",
+                fontsize=8.5,
+                fontweight="bold",
+                zorder=4,
+            )
+    axis.text(2.4, 1.03, "Representative QM9 molecule\nethanol, C₂H₆O", ha="center", fontsize=8.8)
+
+    # Complete directed graph with an emphasized incoming message aggregation.
+    graph_center = np.array([7.0, 3.2])
+    graph_offsets = np.array(
+        [
+            [-1.25, 0.45],
+            [-0.6, 1.15],
+            [0.32, 1.0],
+            [1.18, 0.35],
+            [0.9, -0.75],
+            [-0.1, -1.08],
+            [-1.05, -0.62],
+        ]
+    )
+    graph_nodes = graph_center + graph_offsets
+    for index, start in enumerate(graph_nodes):
+        for end in graph_nodes[index + 1 :]:
+            axis.plot(
+                [start[0], end[0]],
+                [start[1], end[1]],
+                color="#AAB5C3",
+                linewidth=0.65,
+                alpha=0.55,
+                zorder=1,
+            )
+    target_index = 2
+    target = graph_nodes[target_index]
+    for index in (0, 3, 5):
+        _add_arrow(axis, tuple(graph_nodes[index]), tuple(target), "arc3,rad=0.10")
+    node_colors = ["#39414D", "#F7F9FC", "#E05A5A", "#F7F9FC", "#39414D", "#F7F9FC", "#F7F9FC"]
+    for index, (position, color) in enumerate(zip(graph_nodes, node_colors, strict=True)):
+        axis.scatter(
+            position[0],
+            position[1],
+            s=175 if index == target_index else 125,
+            facecolor=color,
+            edgecolor=SELECTED_COLOR if index == target_index else "#526173",
+            linewidth=2.0 if index == target_index else 1.0,
+            zorder=3,
+        )
+    axis.text(
+        7.0,
+        1.05,
+        "Complete directed graph\n6 message-passing blocks + Set2Set",
+        ha="center",
+        fontsize=8.8,
+    )
+
+    # Dense multilayer perceptron.
+    layer_x = [10.25, 11.35, 12.45, 13.35]
+    layer_counts = [5, 4, 3, 1]
+    layer_colors = sns.color_palette("crest", n_colors=len(layer_x))
+    layer_positions: list[list[tuple[float, float]]] = []
+    for x, count in zip(layer_x, layer_counts, strict=True):
+        ys = np.linspace(1.75, 4.35, count)
+        layer_positions.append([(x, float(y)) for y in ys])
+    for left, right in zip(layer_positions[:-1], layer_positions[1:], strict=True):
+        for start in left:
+            for end in right:
+                axis.plot(
+                    [start[0], end[0]],
+                    [start[1], end[1]],
+                    color="#AAB5C3",
+                    linewidth=0.62,
+                    alpha=0.62,
+                    zorder=1,
+                )
+    for color, positions in zip(layer_colors, layer_positions, strict=True):
+        for x, y in positions:
+            axis.scatter(
+                x,
+                y,
+                s=105,
+                facecolor=color,
+                edgecolor="white",
+                linewidth=1.0,
+                zorder=3,
+            )
+    axis.text(11.8, 1.05, "2d → d → d/2 → 1", ha="center", fontsize=9.0, fontweight="bold")
+
+    # Scalar output and conventional HOMO/LUMO energy-level representation.
+    output_color = sns.color_palette("deep")[4]
+    axis.text(
+        15.35,
+        4.75,
+        "One predicted scalar",
+        ha="center",
+        va="center",
+        fontsize=8.8,
+        color="#59677A",
+    )
+    axis.text(
+        15.35,
+        4.2,
+        "ΔEₕₗ  (eV)",
+        ha="center",
+        va="center",
+        fontsize=14,
+        fontweight="bold",
+        color=output_color,
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": output_color},
+    )
+    homo_y, lumo_y = 1.65, 3.25
+    axis.plot([16.7, 18.8], [homo_y, homo_y], color="#273244", linewidth=2.2)
+    axis.plot([16.7, 18.8], [lumo_y, lumo_y], color="#273244", linewidth=2.2)
+    axis.text(18.9, homo_y, "HOMO", ha="left", va="center", fontsize=9.0)
+    axis.text(18.9, lumo_y, "LUMO", ha="left", va="center", fontsize=9.0)
+    axis.text(17.05, homo_y + 0.10, "↑↓", ha="center", va="bottom", fontsize=11)
+    axis.annotate(
+        "",
+        xy=(18.15, lumo_y - 0.05),
+        xytext=(18.15, homo_y + 0.05),
+        arrowprops={"arrowstyle": "<->", "color": output_color, "linewidth": 1.8},
+    )
+    axis.text(
+        18.02,
+        (homo_y + lumo_y) / 2,
+        "ΔEₕₗ",
+        ha="right",
+        va="center",
+        fontsize=10.0,
+        fontweight="bold",
+        color=output_color,
+    )
+    axis.annotate(
+        "Energy",
+        xy=(16.35, 3.7),
+        xytext=(16.35, 1.2),
+        ha="center",
+        va="bottom",
+        rotation=90,
+        fontsize=8.2,
+        color="#637084",
+        arrowprops={"arrowstyle": "-|>", "color": "#637084", "linewidth": 1.0},
+    )
+
+    _add_arrow(axis, (4.62, 3.0), (5.0, 3.0))
+    _add_arrow(axis, (9.22, 3.0), (9.6, 3.0))
+    _add_arrow(axis, (13.7, 3.0), (14.08, 3.0))
+    _save_figure(figure, output_stem)
