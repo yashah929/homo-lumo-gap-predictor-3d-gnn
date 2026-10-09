@@ -2,29 +2,29 @@
 
 ## Project overview
 
-This repository implements a reproducible molecular machine-learning pipeline for learning
+This repository implements a reproducible molecular machine learning pipeline for learning a function $f$ that operates on molecular graphs $G$ such that: 
 
 $$
-f(G) \longrightarrow \Delta E_{\mathrm{HOMO-LUMO}}
+f(G) \longrightarrow \Delta E_{\mathrm{HOMO-LUMO}}.
 $$
 
-from molecular identity, bonding, and equilibrium three-dimensional geometry. The scalar target is the HOMO–LUMO gap supplied by QM9, in electron volts (eV); HOMO and LUMO energies are not predicted separately. The model uses complete directed molecular graphs, distance-based geometric features, gated message passing, and permutation-invariant molecular pooling. The project does not currently specify a software license.
+The model $f$ uses complete directed molecular graphs, distance-based geometric features, gated message passing, and permutation-invariant molecular pooling. 
 
-## Headline held-out result
+## Key numbers
 
-> - **Dataset:** 130,831 usable QM9 molecules
-> - **Development set:** 104,664 molecules
-> - **Locked test set:** 26,167 molecules
-> - **Model selection:** 36 configurations / 144 four-fold CV runs
-> - **Held-out MAE:** 0.044720 eV
-> - **Held-out RMSE:** 0.071658 eV
-> - **Held-out $R^2$:** 0.996884
+> - **Dataset:** 130,831 molecules from QM9 dataset
+> - **Training set:** 104,664 molecules (20%)
+> - **Final test set:** 26,167 molecules (20%)
+> - **Hyperparameter selection:** 36 configurations / 144 four-fold cross-validation (CV) runs
+> - **MAE on test set:** 0.044720 eV
+> - **RMSE on test set:** 0.071658 eV
+> - **R^2 on test set$:** 0.996884
 
-The locked test set was evaluated once after cross-validation, configuration selection, and fresh training on the complete development set. No model or hyperparameter changes were made after the held-out result was observed.
+The test set was evaluated once after cross-validation, configuration selection, and fresh training on the complete training set.
 
 ![Density-aware predicted versus reference HOMO-LUMO gaps for the locked test set](results/figures/predicted_vs_reference.png)
 
-*Held-out predictions for all 26,167 locked test molecules. Hexagon color encodes local molecule count; the diagonal is the identity line. Metrics are read from the committed final evaluation record.*
+*Model predictions for all 26,167 locked test molecules. Hexagon color encodes local molecule count; the diagonal is the identity line.*
 
 ## Model in plain language
 
@@ -36,17 +36,17 @@ Each molecule is represented as a graph whose nodes are atoms. Every atom is con
 
 ![High-level molecule-to-gap prediction flow](results/figures/model_overview.png)
 
-*A representative QM9 molecule is converted to a complete geometric graph, processed by the message-passing network and molecular pooling, then passed through the prediction MLP. The single output is the HOMO–LUMO energy separation, conventionally shown as the gap between the occupied HOMO and unoccupied LUMO levels.*
+*A representative QM9 molecule is converted to a complete geometric graph, processed by the message-passing network and molecular pooling, and then passed through the prediction MLP. The output of the MLP is the scalar HOMO-LUMO gap, conventionally shown as the gap between the occupied HOMO and unoccupied LUMO levels. See if you can identify this molecule!*
 
 ### Detailed feature flow
 
 ![Architecture of the complete-graph three-dimensional message-passing model](results/figures/model_architecture.png)
 
-*Chemical features and the distance-derived geometric pathway meet in the message-passing blocks. Geometry enters only through pairwise distances, so raw xyz coordinates are not model inputs.*
+*Chemical features (atomic number, # of neighbors, hybridization, etc.) and the distance-derived geometric pathway meet in the message-passing blocks. Since geometry is only considered via pairwise distances, raw xyz coordinates of atoms are NOT used to learn $f$.*
 
 ## Results and model selection
 
-All 144 cross-validation runs completed. Selection used only validation performance on the development set. The selected configuration, `cfg_034`, was initialized afresh and trained on all 104,664 development molecules for exactly 279 epochs before the single locked-test evaluation.
+144 cross-validation runs were completed on the training set. The selected configuration, `cfg_034`, was initialized afresh and trained on all 104,664 development molecules (the entire training sest) for exactly 279 epochs before the single locked-test set evaluation.
 
 ### Cross-validation selection
 
