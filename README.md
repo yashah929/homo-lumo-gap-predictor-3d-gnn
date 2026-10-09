@@ -13,7 +13,7 @@ The model $f$ uses complete directed molecular graphs, distance-based geometric 
 ## Key numbers
 
 > - **Dataset:** 130,831 molecules from QM9 dataset
-> - **Training set:** 104,664 molecules (20%)
+> - **Training set:** 104,664 molecules (80%)
 > - **Final test set:** 26,167 molecules (20%)
 > - **Hyperparameter selection:** 36 configurations / 144 four-fold cross-validation (CV) runs
 > - **MAE on test set:** 0.044720 eV
